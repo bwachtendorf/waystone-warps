@@ -11,6 +11,7 @@ import dev.mizarc.waystonewarps.interaction.localization.LocalizationProvider
 import dev.mizarc.waystonewarps.interaction.menus.Menu
 import dev.mizarc.waystonewarps.interaction.menus.MenuNavigator
 import dev.mizarc.waystonewarps.interaction.messaging.PrimaryColourPalette
+import dev.mizarc.waystonewarps.interaction.utils.PermissionHelper
 import dev.mizarc.waystonewarps.interaction.utils.lore
 import dev.mizarc.waystonewarps.interaction.utils.name
 import net.kyori.adventure.text.Component
@@ -76,7 +77,8 @@ class WarpNamingMenu(
                 name,
                 location.toPosition3D(),
                 location.world.uid,
-                location.world.getBlockAt(belowLocation).type.name
+                location.world.getBlockAt(belowLocation).type.name,
+                PermissionHelper.canBypassLimit(player)
             )
 
             when (result) {
