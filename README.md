@@ -42,7 +42,7 @@ To teleport to waystones, right click with a compass in hand. This will bring up
 | `waystonewarps.admin.invalids.remove` | Allows usage of remove command. |
 | `waystonewarps.admin.invalids.removeall` | Allows usage of removeall command. |
 | `waystonewarps.teleport` | Allows teleportation |
-| `waystonewarps.teleport.interworld` | Allows teleportation to undiscovered warps |
+| `waystonewarps.teleport.interworld` | Allows teleportation between different worlds |
 | `waystonewarps.teleport.cooldown_bypass` | Allows bypassing the cooldown timer |
 | `waystonewarps.create` | Allow the creation of warps |
 | `waystonewarps.discover` | Allow the discovery of warps |
