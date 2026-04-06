@@ -28,7 +28,7 @@ permissions:
   waystonewarps.create:
     description: Allows creating waystone warps
     default: true
-    
+
   waystonewarps.discover:
     description: Allows discovering waystone warps
     default: true
@@ -87,4 +87,8 @@ permissions:
 
   waystonewarps.teleport.cooldown_bypass:
     description: Bypasses the cooldown between teleportations
+    default: op
+
+  waystonewarps.teleport.undiscovered:
+    description: Allows teleportation to undiscovered warps
     default: op
