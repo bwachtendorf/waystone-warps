@@ -70,15 +70,15 @@ object LocalizationKeys {
     const val MENU_COMMON_ITEM_PAGE_NAME = "menu.common.item.page.name"
     const val MENU_COMMON_ITEM_PREV_NAME = "menu.common.item.prev.name"
     const val MENU_COMMON_ITEM_SELECT_ALL_NAME = "menu.common.item.select_all.name"
-    
+
     // Player Search Menu
     const val MENU_PLAYER_SEARCH_TITLE = "menu.player_search.title"
-    
+
     // Warp Icon Menu
     const val MENU_WARP_ICON_TITLE = "menu.warp_icon.title"
     const val MENU_WARP_ICON_INFO_ITEM_NAME = "menu.warp_icon.info_item.name"
     const val MENU_WARP_ICON_INFO_ITEM_LORE = "menu.warp_icon.info_item.lore"
-    
+
     // Warp Management Menu
     const val MENU_WARP_MANAGEMENT_TITLE = "menu.warp_management.title"
     const val MENU_WARP_MANAGEMENT_ACCESS_NAME = "menu.warp_management.access.name"
@@ -102,7 +102,7 @@ object LocalizationKeys {
     // Warp Naming Menu
     const val MENU_WARP_NAMING_TITLE = "menu.warp_naming.title"
     const val MENU_WARP_NAMING_ITEM_WARP_LORE = "menu.warp_naming.item.warp.lore"
-    
+
     // Warp Player Menu
     const val MENU_WARP_PLAYER_TITLE = "menu.warp_player.title"
     const val MENU_WARP_PLAYER_ITEM_DISCOVERED = "menu.warp_player.item.discovered.name"
@@ -118,10 +118,10 @@ object LocalizationKeys {
     const val MENU_WARP_PLAYER_ITEM_PLAYER_LORE_NO_PERMISSION = "menu.warp_player.item.player.lore.no_permission"
     const val MENU_WARP_PLAYER_ITEM_PLAYER_LORE_TOGGLE_WHITELIST = "menu.warp_player.item.player.lore.toggle_whitelist"
     const val MENU_WARP_PLAYER_ITEM_PLAYER_LORE_REVOKE_ACCESS = "menu.warp_player.item.player.lore.revoke_access"
-    
+
     // Warp Renaming Menu
     const val MENU_WARP_RENAMING_TITLE = "menu.warp_renaming.title"
-    
+
     // Warp Options Menu
     const val MENU_WARP_OPTIONS_TITLE = "menu.warp_options.title"
     const val MENU_WARP_OPTIONS_ITEM_LOCATE_NAME = "menu.warp_options.item.locate.name"
@@ -137,12 +137,16 @@ object LocalizationKeys {
     const val MENU_WARP_OPTIONS_ITEM_CANNOT_DELETE_NAME = "menu.warp_options.item.cannot_delete.name"
     const val MENU_WARP_OPTIONS_ITEM_CANNOT_DELETE_LORE = "menu.warp_options.item.cannot_delete.lore"
     const val MENU_WARP_OPTIONS_CONFIRM_DELETE = "menu.warp_options.confirm.delete"
-    
+
     // Warp Search Menu
     const val MENU_WARP_SEARCH_TITLE = "menu.warp_search.title"
-    
+
     // Warp Menu
     const val MENU_WARP_TITLE = "menu.warp.title"
+    const val MENU_WARP_ITEM_FILTER_USABLE_NAME = "menu.warp.item.filter.usable.name"
+    const val MENU_WARP_ITEM_FILTER_USABLE_LORE = "menu.warp.item.filter.usable.lore"
+    const val MENU_WARP_ITEM_FILTER_UNUSABLE_NAME = "menu.warp.item.filter.unusable.name"
+    const val MENU_WARP_ITEM_FILTER_UNUSABLE_LORE = "menu.warp.item.filter.unusable.lore"
     const val MENU_WARP_ITEM_VIEW_MODE_DISCOVERED_NAME = "menu.warp.item.view_mode.discovered.name"
     const val MENU_WARP_ITEM_VIEW_MODE_DISCOVERED_LORE = "menu.warp.item.view_mode.discovered.lore"
     const val MENU_WARP_ITEM_VIEW_MODE_FAVOURITES_NAME = "menu.warp.item.view_mode.favourites.name"
@@ -156,13 +160,13 @@ object LocalizationKeys {
     const val MENU_WARP_ITEM_WARP_LORE_LOCKED = "menu.warp.item.warp.lore.locked"
     const val MENU_WARP_ITEM_WARP_LORE_NO_TELEPORT_PERMISSION = "menu.warp.item.warp.lore.no_teleport_permission"
     const val MENU_WARP_ITEM_WARP_LORE_NO_INTERWORLD_PERMISSION = "menu.warp.item.warp.lore.no_interworld_permission"
-    
+
     // Warp Skins Menu
     const val MENU_WARP_SKINS_TITLE = "menu.warp_skins.title"
     const val MENU_WARP_SKINS_ITEM_TOOLTIP_NAME = "menu.warp_skins.item.tooltip.name"
     const val MENU_WARP_SKINS_ITEM_TOOLTIP_LINE_1 = "menu.warp_skins.item.tooltip.line1"
     const val MENU_WARP_SKINS_ITEM_TOOLTIP_LINE_2 = "menu.warp_skins.item.tooltip.line2"
-    
+
     // Confirmation Menu
     const val MENU_CONFIRMATION_ITEM_YES_NAME = "menu.confirmation.item.yes.name"
     const val MENU_CONFIRMATION_ITEM_YES_LORE = "menu.confirmation.item.yes.lore"

@@ -40,6 +40,7 @@ class WarpMenu(
     private val getFavouritedWarpAccess: GetFavouritedWarpAccess by inject()
     private val getOwnedWarps: GetOwnedWarps by inject()
 
+    private var usableOnly = true
     private var viewMode = 0  // 0 = All, Favourites, Owned
     private var page = 1
     private var warpNameSearch: String = ""
@@ -94,13 +95,15 @@ class WarpMenu(
         val outlinePane = OutlinePane(0, 1, 9, 5)
         val dividerItem = ItemStack(Material.BLACK_STAINED_GLASS_PANE).name(" ")
         val guiDividerItem = GuiItem(dividerItem) { guiEvent -> guiEvent.isCancelled = true }
-        outlinePane.applyMask(Mask(
-            "111111111",
-            "100000001",
-            "100000001",
-            "100000001",
-            "111111111"
-        ))
+        outlinePane.applyMask(
+            Mask(
+                "111111111",
+                "100000001",
+                "100000001",
+                "100000001",
+                "111111111"
+            )
+        )
         outlinePane.addItem(guiDividerItem)
         outlinePane.setRepeat(true)
         gui.addPane(outlinePane)
@@ -111,22 +114,86 @@ class WarpMenu(
 
         // Add go back item
         val exitItem = ItemStack(Material.NETHER_STAR)
-            .name(localizationProvider.get(player.uniqueId, LocalizationKeys.MENU_COMMON_ITEM_CLOSE_NAME), PrimaryColourPalette.CANCELLED.color!!)
+            .name(
+                localizationProvider.get(player.uniqueId, LocalizationKeys.MENU_COMMON_ITEM_CLOSE_NAME),
+                PrimaryColourPalette.CANCELLED.color!!
+            )
         val guiExitItem = GuiItem(exitItem) { menuNavigator.goBack() }
         controlsPane.addItem(guiExitItem, 0, 0)
+
+        // Add filter item
+        val filterItem = when (usableOnly) {
+            true -> ItemStack(Material.BUCKET)
+                .name(
+                    localizationProvider.get(player.uniqueId, LocalizationKeys.MENU_WARP_ITEM_FILTER_USABLE_NAME),
+                )
+                .lore(
+                    localizationProvider.get(player.uniqueId, LocalizationKeys.MENU_WARP_ITEM_FILTER_USABLE_LORE),
+                )
+
+            false -> ItemStack(Material.WATER_BUCKET)
+                .name(
+                    localizationProvider.get(player.uniqueId, LocalizationKeys.MENU_WARP_ITEM_FILTER_UNUSABLE_NAME),
+                )
+                .lore(
+                    localizationProvider.get(player.uniqueId, LocalizationKeys.MENU_WARP_ITEM_FILTER_UNUSABLE_LORE),
+                )
+        }
+
+        val guiFilterItem = GuiItem(filterItem) { guiEvent ->
+            // invert usable filter
+            usableOnly = !usableOnly
+            page = 1
+            open()
+        }
+
+        controlsPane.addItem(guiFilterItem, 1, 0)
 
         // Add view mode item
         val viewModeItem = when (viewMode) {
             0 -> ItemStack(Material.SUGAR)
-                .name(localizationProvider.get(player.uniqueId, LocalizationKeys.MENU_WARP_ITEM_VIEW_MODE_DISCOVERED_NAME))
-                .lore(localizationProvider.get(player.uniqueId, LocalizationKeys.MENU_WARP_ITEM_VIEW_MODE_DISCOVERED_LORE))
+                .name(
+                    localizationProvider.get(
+                        player.uniqueId,
+                        LocalizationKeys.MENU_WARP_ITEM_VIEW_MODE_DISCOVERED_NAME
+                    )
+                )
+                .lore(
+                    localizationProvider.get(
+                        player.uniqueId,
+                        LocalizationKeys.MENU_WARP_ITEM_VIEW_MODE_DISCOVERED_LORE
+                    )
+                )
+
             1 -> ItemStack(Material.GLOWSTONE_DUST)
-                .name(localizationProvider.get(player.uniqueId, LocalizationKeys.MENU_WARP_ITEM_VIEW_MODE_FAVOURITES_NAME))
-                .lore(localizationProvider.get(player.uniqueId, LocalizationKeys.MENU_WARP_ITEM_VIEW_MODE_FAVOURITES_LORE))
+                .name(
+                    localizationProvider.get(
+                        player.uniqueId,
+                        LocalizationKeys.MENU_WARP_ITEM_VIEW_MODE_FAVOURITES_NAME
+                    )
+                )
+                .lore(
+                    localizationProvider.get(
+                        player.uniqueId,
+                        LocalizationKeys.MENU_WARP_ITEM_VIEW_MODE_FAVOURITES_LORE
+                    )
+                )
+
             else -> ItemStack(Material.REDSTONE)
-                .name(localizationProvider.get(player.uniqueId, LocalizationKeys.MENU_WARP_ITEM_VIEW_MODE_OWNED_NAME))
-                .lore(localizationProvider.get(player.uniqueId, LocalizationKeys.MENU_WARP_ITEM_VIEW_MODE_OWNED_LORE))
+                .name(
+                    localizationProvider.get(
+                        player.uniqueId,
+                        LocalizationKeys.MENU_WARP_ITEM_VIEW_MODE_OWNED_NAME
+                    )
+                )
+                .lore(
+                    localizationProvider.get(
+                        player.uniqueId,
+                        LocalizationKeys.MENU_WARP_ITEM_VIEW_MODE_OWNED_LORE
+                    )
+                )
         }
+
         val guiViewModeItem = GuiItem(viewModeItem) { guiEvent ->
             // Cycle through 0, 1, 2
             viewMode = when (guiEvent.isLeftClick) {
@@ -136,21 +203,29 @@ class WarpMenu(
             page = 1
             open()
         }
+
         controlsPane.addItem(guiViewModeItem, 2, 0)
 
         // Add search button
         val searchItem = ItemStack(Material.NAME_TAG)
             .name(localizationProvider.get(player.uniqueId, LocalizationKeys.MENU_WARP_ITEM_SEARCH_NAME))
+
         val guiSearchItem = GuiItem(searchItem) {
             val warpSearchMenu = WarpSearchMenu(player, menuNavigator, localizationProvider)
             menuNavigator.openMenu(warpSearchMenu)
         }
+
         controlsPane.addItem(guiSearchItem, 3, 0)
 
         // Add clear search button
         if (warpNameSearch.isNotEmpty()) {
             val clearSearchItem = ItemStack(Material.MAGMA_CREAM)
-                .name(localizationProvider.get(player.uniqueId, LocalizationKeys.MENU_WARP_ITEM_CLEAR_SEARCH_NAME))
+                .name(
+                    localizationProvider.get(
+                        player.uniqueId,
+                        LocalizationKeys.MENU_WARP_ITEM_CLEAR_SEARCH_NAME
+                    )
+                )
             val guiClearSearchItem = GuiItem(clearSearchItem) {
                 warpNameSearch = ""
                 page = 1
@@ -171,7 +246,7 @@ class WarpMenu(
 
             // Update page number item
             val pageNumberText = localizationProvider.get(
-                player.uniqueId, 
+                player.uniqueId,
                 LocalizationKeys.MENU_COMMON_ITEM_PAGE_NAME,
                 currentPage.toString(),
                 totalPages.toString()
@@ -185,7 +260,10 @@ class WarpMenu(
             val guiPrevItem: GuiItem
             if (currentPage <= 1) {
                 prevItem = ItemStack(Material.ARROW)
-                    .name(localizationProvider.get(player.uniqueId, LocalizationKeys.MENU_COMMON_ITEM_PREV_NAME), PrimaryColourPalette.UNAVAILABLE.color!!)
+                    .name(
+                        localizationProvider.get(player.uniqueId, LocalizationKeys.MENU_COMMON_ITEM_PREV_NAME),
+                        PrimaryColourPalette.UNAVAILABLE.color!!
+                    )
                 guiPrevItem = GuiItem(prevItem)
             } else {
                 prevItem = ItemStack(Material.SPECTRAL_ARROW)
@@ -204,8 +282,10 @@ class WarpMenu(
             val guiNextItem: GuiItem
             if (currentPage >= totalPages) {
                 nextItem = ItemStack(Material.ARROW)
-                    .name(localizationProvider.get(player.uniqueId, LocalizationKeys.MENU_COMMON_ITEM_NEXT_NAME),
-                        PrimaryColourPalette.UNAVAILABLE.color!!)
+                    .name(
+                        localizationProvider.get(player.uniqueId, LocalizationKeys.MENU_COMMON_ITEM_NEXT_NAME),
+                        PrimaryColourPalette.UNAVAILABLE.color!!
+                    )
                 guiNextItem = GuiItem(nextItem)
             } else {
                 nextItem = ItemStack(Material.SPECTRAL_ARROW)
@@ -240,45 +320,82 @@ class WarpMenu(
             } ?: run {
                 "Location not found"
             }
-            
+
             val customLore = stockLore.toMutableList()
             customLore.add(0, "§8$locationText")
             customLore.add(0, "§b${warpModel.player.name}")
 
             val hasTeleportPermission = player.hasPermission("waystonewarps.teleport")
             val isDifferentWorld = warp.worldId != player.world.uid
-            val hasInterworldPermission = !isDifferentWorld || player.hasPermission("waystonewarps.teleport.interworld")
+            val hasInterworldPermission =
+                !isDifferentWorld || player.hasPermission("waystonewarps.teleport.interworld")
             val hasPermission = hasTeleportPermission && hasInterworldPermission
 
             // Check if the warp is locked for this player
-            val isLocked = warp.isLocked && !getWhitelistedPlayers.execute(warp.id).contains(player.uniqueId) && player.uniqueId != warp.playerId
+            val isLocked = warp.isLocked && !getWhitelistedPlayers.execute(warp.id)
+                .contains(player.uniqueId) && player.uniqueId != warp.playerId
+
+            // Skip to next warp if we are filtering
+            if (usableOnly) {
+                if (!hasPermission || isLocked) {
+                    continue
+                }
+            }
 
             // Add the locked status if applicable
             if (isLocked) {
-                customLore.add(2, "§c${localizationProvider.get(player.uniqueId, LocalizationKeys.MENU_WARP_ITEM_WARP_LORE_LOCKED)}")
+                customLore.add(
+                    2,
+                    "§c${
+                        localizationProvider.get(
+                            player.uniqueId,
+                            LocalizationKeys.MENU_WARP_ITEM_WARP_LORE_LOCKED
+                        )
+                    }"
+                )
             }
 
             // Add permission-related lore (only show one message at a time, priority order)
             when {
                 !hasTeleportPermission -> {
-                    customLore.add(2, "§c${
-                        localizationProvider.get(player.uniqueId, LocalizationKeys.MENU_WARP_ITEM_WARP_LORE_NO_TELEPORT_PERMISSION)
-                    }")
+                    customLore.add(
+                        2, "§c${
+                            localizationProvider.get(
+                                player.uniqueId,
+                                LocalizationKeys.MENU_WARP_ITEM_WARP_LORE_NO_TELEPORT_PERMISSION
+                            )
+                        }"
+                    )
                 }
+
                 isDifferentWorld && !hasInterworldPermission -> {
-                    customLore.add(2, "§c${
-                        localizationProvider.get(player.uniqueId, LocalizationKeys.MENU_WARP_ITEM_WARP_LORE_NO_INTERWORLD_PERMISSION)
-                    }")
+                    customLore.add(
+                        2, "§c${
+                            localizationProvider.get(
+                                player.uniqueId,
+                                LocalizationKeys.MENU_WARP_ITEM_WARP_LORE_NO_INTERWORLD_PERMISSION
+                            )
+                        }"
+                    )
                 }
+
                 isLocked -> {
                     // No additional message needed if locked
                 }
+
                 else -> {
-                    customLore.add(2, localizationProvider.get(player.uniqueId, LocalizationKeys.MENU_WARP_ITEM_WARP_LORE_LEFT_CLICK))
+                    customLore.add(
+                        2,
+                        localizationProvider.get(
+                            player.uniqueId,
+                            LocalizationKeys.MENU_WARP_ITEM_WARP_LORE_LEFT_CLICK
+                        )
+                    )
                 }
             }
 
-            val warpItem = ItemStack(warpModel.icon).applyIconMeta(warp.iconMeta).name(warpModel.name).lore(customLore)
+            val warpItem =
+                ItemStack(warpModel.icon).applyIconMeta(warp.iconMeta).name(warpModel.name).lore(customLore)
 
             val guiWarpItem = if (hasPermission && !isLocked) {
                 // Player has permission and warp is not locked to them - allow interaction
@@ -293,63 +410,92 @@ class WarpMenu(
                             onPending = {
                                 player.sendActionBar(
                                     Component.text(
-                                        localizationProvider.get(player.uniqueId, LocalizationKeys.FEEDBACK_TELEPORT_PENDING, warp.name)
+                                        localizationProvider.get(
+                                            player.uniqueId,
+                                            LocalizationKeys.FEEDBACK_TELEPORT_PENDING,
+                                            warp.name
+                                        )
                                     ).color(PrimaryColourPalette.INFO.color)
                                 )
                             },
                             onSuccess = {
                                 player.sendActionBar(
                                     Component.text(
-                                        localizationProvider.get(player.uniqueId, LocalizationKeys.FEEDBACK_TELEPORT_SUCCESS, warp.name)
+                                        localizationProvider.get(
+                                            player.uniqueId,
+                                            LocalizationKeys.FEEDBACK_TELEPORT_SUCCESS,
+                                            warp.name
+                                        )
                                     ).color(PrimaryColourPalette.SUCCESS.color)
                                 )
                             },
                             onFailure = {
                                 player.sendActionBar(
                                     Component.text(
-                                        localizationProvider.get(player.uniqueId, LocalizationKeys.FEEDBACK_TELEPORT_FAILED)
+                                        localizationProvider.get(
+                                            player.uniqueId,
+                                            LocalizationKeys.FEEDBACK_TELEPORT_FAILED
+                                        )
                                     ).color(PrimaryColourPalette.FAILED.color)
                                 )
                             },
                             onInsufficientFunds = {
                                 player.sendActionBar(
                                     Component.text(
-                                        localizationProvider.get(player.uniqueId, LocalizationKeys.FEEDBACK_TELEPORT_INSUFFICIENT_FUNDS)
+                                        localizationProvider.get(
+                                            player.uniqueId,
+                                            LocalizationKeys.FEEDBACK_TELEPORT_INSUFFICIENT_FUNDS
+                                        )
                                     ).color(PrimaryColourPalette.CANCELLED.color)
                                 )
                             },
                             onWorldNotFound = {
                                 player.sendActionBar(
                                     Component.text(
-                                        localizationProvider.get(player.uniqueId, LocalizationKeys.FEEDBACK_TELEPORT_WORLD_NOT_FOUND)
+                                        localizationProvider.get(
+                                            player.uniqueId,
+                                            LocalizationKeys.FEEDBACK_TELEPORT_WORLD_NOT_FOUND
+                                        )
                                     ).color(PrimaryColourPalette.FAILED.color)
                                 )
                             },
                             onLocked = {
                                 player.sendActionBar(
                                     Component.text(
-                                        localizationProvider.get(player.uniqueId, LocalizationKeys.FEEDBACK_TELEPORT_LOCKED)
+                                        localizationProvider.get(
+                                            player.uniqueId,
+                                            LocalizationKeys.FEEDBACK_TELEPORT_LOCKED
+                                        )
                                     ).color(PrimaryColourPalette.CANCELLED.color)
                                 )
                             },
                             onCanceled = {
                                 player.sendActionBar(
                                     Component.text(
-                                        localizationProvider.get(player.uniqueId, LocalizationKeys.FEEDBACK_TELEPORT_CANCELLED)
+                                        localizationProvider.get(
+                                            player.uniqueId,
+                                            LocalizationKeys.FEEDBACK_TELEPORT_CANCELLED
+                                        )
                                     ).color(PrimaryColourPalette.CANCELLED.color)
                                 )
                             },
                             onPermissionDenied = {
                                 player.sendActionBar(
                                     Component.text(
-                                        localizationProvider.get(player.uniqueId, LocalizationKeys.FEEDBACK_TELEPORT_NO_PERMISSION)
+                                        localizationProvider.get(
+                                            player.uniqueId,
+                                            LocalizationKeys.FEEDBACK_TELEPORT_NO_PERMISSION
+                                        )
                                     ).color(PrimaryColourPalette.CANCELLED.color)
                                 )
                             },
                             onInterworldPermissionDenied = {
                                 player.sendActionBar(
                                     Component.text(
-                                        localizationProvider.get(player.uniqueId, LocalizationKeys.FEEDBACK_TELEPORT_NO_INTERWORLD_PERMISSION)
+                                        localizationProvider.get(
+                                            player.uniqueId,
+                                            LocalizationKeys.FEEDBACK_TELEPORT_NO_INTERWORLD_PERMISSION
+                                        )
                                     ).color(PrimaryColourPalette.CANCELLED.color)
                                 )
                             }
@@ -362,22 +508,39 @@ class WarpMenu(
                 // Player doesn't have permission or warp is locked - show item but disable interaction
                 GuiItem(warpItem) { guiEvent ->
                     // Only allow right-click for options menu if the player has access to the warp
-                    if (guiEvent.isRightClick && !(warp.isLocked && !getWhitelistedPlayers.execute(warp.id).contains(player.uniqueId) && player.uniqueId != warp.playerId)) {
+                    if (guiEvent.isRightClick && !(warp.isLocked && !getWhitelistedPlayers.execute(warp.id)
+                            .contains(player.uniqueId) && player.uniqueId != warp.playerId)
+                    ) {
                         menuNavigator.openMenu(WarpOptionsMenu(player, menuNavigator, warp, localizationProvider))
                     } else {
                         // Show appropriate message for left click or no permission
                         if (!hasTeleportPermission) {
-                            player.sendActionBar(Component.text(
-                    localizationProvider.get(player.uniqueId, LocalizationKeys.MENU_WARP_ITEM_WARP_LORE_NO_TELEPORT_PERMISSION)
-                ).color(PrimaryColourPalette.CANCELLED.color))
+                            player.sendActionBar(
+                                Component.text(
+                                    localizationProvider.get(
+                                        player.uniqueId,
+                                        LocalizationKeys.MENU_WARP_ITEM_WARP_LORE_NO_TELEPORT_PERMISSION
+                                    )
+                                ).color(PrimaryColourPalette.CANCELLED.color)
+                            )
                         } else if (isDifferentWorld && !hasInterworldPermission) {
-                            player.sendActionBar(Component.text(
-                                localizationProvider.get(player.uniqueId, LocalizationKeys.MENU_WARP_ITEM_WARP_LORE_NO_INTERWORLD_PERMISSION)
-                            ).color(PrimaryColourPalette.CANCELLED.color))
+                            player.sendActionBar(
+                                Component.text(
+                                    localizationProvider.get(
+                                        player.uniqueId,
+                                        LocalizationKeys.MENU_WARP_ITEM_WARP_LORE_NO_INTERWORLD_PERMISSION
+                                    )
+                                ).color(PrimaryColourPalette.CANCELLED.color)
+                            )
                         } else if (warp.isLocked) {
-                            player.sendActionBar(Component.text(
-                                localizationProvider.get(player.uniqueId, LocalizationKeys.MENU_WARP_ITEM_WARP_LORE_LOCKED)
-                            ).color(PrimaryColourPalette.CANCELLED.color))
+                            player.sendActionBar(
+                                Component.text(
+                                    localizationProvider.get(
+                                        player.uniqueId,
+                                        LocalizationKeys.MENU_WARP_ITEM_WARP_LORE_LOCKED
+                                    )
+                                ).color(PrimaryColourPalette.CANCELLED.color)
+                            )
                         }
                     }
                     guiEvent.isCancelled = true
