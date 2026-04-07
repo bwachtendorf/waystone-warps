@@ -34,7 +34,7 @@ import org.bukkit.inventory.ItemStack
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
-class WaystoneInteractListener(private val configService: ConfigService): Listener, KoinComponent {
+class WaystoneInteractListener(private val configService: ConfigService) : Listener, KoinComponent {
     private val getWarpAtPosition: GetWarpAtPosition by inject()
     private val discoverWarp: DiscoverWarp by inject()
     private val getWhitelistedPlayers: GetWhitelistedPlayers by inject()
@@ -68,9 +68,15 @@ class WaystoneInteractListener(private val configService: ConfigService): Listen
             val isAdminMenuOpenAttempt = !isOwner && canOpenOtherMenu && player.isSneaking
 
             if (warp.isLocked && !isOwner && !isAdminMenuOpenAttempt
-                    && !getWhitelistedPlayers.execute(warp.id).contains(player.uniqueId)) {
+                && !getWhitelistedPlayers.execute(warp.id).contains(player.uniqueId)
+            ) {
                 player.sendActionBar(
-                    Component.text(localizationProvider.get(player.uniqueId, LocalizationKeys.FEEDBACK_WAYSTONE_PRIVATE))
+                    Component.text(
+                        localizationProvider.get(
+                            player.uniqueId,
+                            LocalizationKeys.FEEDBACK_WAYSTONE_PRIVATE
+                        )
+                    )
                         .color(PrimaryColourPalette.FAILED.color)
                 )
                 return
@@ -88,13 +94,20 @@ class WaystoneInteractListener(private val configService: ConfigService): Listen
                     if (event.player.isSneaking) {
                         menuNavigator.openMenu(WarpManagementMenu(player, menuNavigator, it))
                     } else {
-                        menuNavigator.openMenu(WarpMenu(player, menuNavigator, localizationProvider))
+                        menuNavigator.openMenu(
+                            WarpMenu(
+                                player,
+                                menuNavigator,
+                                localizationProvider,
+                                configService
+                            )
+                        )
                     }
                 } else {
                     menuNavigator.openMenu(WarpManagementMenu(player, menuNavigator, it))
                 }
 
-            // Non-owner path.
+                // Non-owner path.
             } else {
                 // Allow server admins to open the management menu.
                 if (isAdminMenuOpenAttempt) {
@@ -103,30 +116,49 @@ class WaystoneInteractListener(private val configService: ConfigService): Listen
                 }
 
                 if (configService.allowWarpsMenuViaWaystone()) {
-                    menuNavigator.openMenu(WarpMenu(player, menuNavigator, localizationProvider))
+                    menuNavigator.openMenu(WarpMenu(player, menuNavigator, localizationProvider, configService))
                 }
 
                 // Check if player has permission to discover warps
                 if (!player.hasPermission("waystonewarps.discover")) {
-                    player.sendActionBar(Component.text("You don't have permission to discover warps").color(PrimaryColourPalette.FAILED.color))
+                    player.sendActionBar(
+                        Component.text("You don't have permission to discover warps")
+                            .color(PrimaryColourPalette.FAILED.color)
+                    )
                     return
                 }
 
                 val result = discoverWarp.execute(player.uniqueId, it.id)
                 if (result) {
-                    player.sendActionBar(Component.text("Warp ").color(PrimaryColourPalette.SUCCESS.color)
-                        .append(Component.text(warp.name).color(AccentColourPalette.SUCCESS.color))
-                        .append(Component.text( " has been discovered!").color(PrimaryColourPalette.SUCCESS.color)))
+                    player.sendActionBar(
+                        Component.text("Warp ").color(PrimaryColourPalette.SUCCESS.color)
+                            .append(Component.text(warp.name).color(AccentColourPalette.SUCCESS.color))
+                            .append(Component.text(" has been discovered!").color(PrimaryColourPalette.SUCCESS.color))
+                    )
                     clickedBlock.world.spawnParticle(Particle.TOTEM_OF_UNDYING, particleLocation, 20)
-                    clickedBlock.world.playSound(particleLocation, Sound.BLOCK_AMETHYST_BLOCK_HIT, SoundCategory.BLOCKS, 1.0f, 1.0f)
+                    clickedBlock.world.playSound(
+                        particleLocation,
+                        Sound.BLOCK_AMETHYST_BLOCK_HIT,
+                        SoundCategory.BLOCKS,
+                        1.0f,
+                        1.0f
+                    )
                 } else {
                     if (configService.allowWarpsMenuViaWaystone()) {
-                        menuNavigator.openMenu(WarpMenu(player, menuNavigator, localizationProvider))
-                    }
-                    else {
-                        player.sendActionBar(Component.text("Warp ").color(PrimaryColourPalette.INFO.color)
-                            .append(Component.text(warp.name).color(AccentColourPalette.INFO.color))
-                            .append(Component.text( " already discovered").color(PrimaryColourPalette.INFO.color)))
+                        menuNavigator.openMenu(
+                            WarpMenu(
+                                player,
+                                menuNavigator,
+                                localizationProvider,
+                                configService
+                            )
+                        )
+                    } else {
+                        player.sendActionBar(
+                            Component.text("Warp ").color(PrimaryColourPalette.INFO.color)
+                                .append(Component.text(warp.name).color(AccentColourPalette.INFO.color))
+                                .append(Component.text(" already discovered").color(PrimaryColourPalette.INFO.color))
+                        )
                     }
                 }
             }
@@ -154,7 +186,9 @@ class WaystoneInteractListener(private val configService: ConfigService): Listen
             if (testEvent.isCancelled) return
 
             if (!player.hasPermission("waystonewarps.create")) {
-                player.sendActionBar(Component.text("You don't have permission to create warps").color(PrimaryColourPalette.FAILED.color))
+                player.sendActionBar(
+                    Component.text("You don't have permission to create warps").color(PrimaryColourPalette.FAILED.color)
+                )
                 return
             }
 

@@ -15,4 +15,5 @@ interface ConfigService {
     fun allowWarpsMenuViaCompass(): Boolean
     fun allowWarpsMenuViaWaystone(): Boolean
     fun hologramsEnabled(): Boolean
+    fun worldNameEnabled(): Boolean
 }

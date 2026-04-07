@@ -11,6 +11,7 @@ import dev.mizarc.waystonewarps.application.actions.teleport.TeleportPlayer
 import dev.mizarc.waystonewarps.application.actions.discovery.GetPlayerWarpAccess
 import dev.mizarc.waystonewarps.application.actions.management.GetOwnedWarps
 import dev.mizarc.waystonewarps.application.actions.whitelist.GetWhitelistedPlayers
+import dev.mizarc.waystonewarps.application.services.ConfigService
 import dev.mizarc.waystonewarps.domain.warps.Warp
 import dev.mizarc.waystonewarps.interaction.localization.LocalizationKeys
 import dev.mizarc.waystonewarps.interaction.localization.LocalizationProvider
@@ -30,10 +31,11 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
 class WarpMenu(
-    private val player: Player, 
+    private val player: Player,
     private val menuNavigator: MenuNavigator,
-    private val localizationProvider: LocalizationProvider
-): Menu, KoinComponent {
+    private val localizationProvider: LocalizationProvider,
+    private val configService: ConfigService
+) : Menu, KoinComponent {
     private val getPlayerWarpAccess: GetPlayerWarpAccess by inject()
     private val teleportPlayer: TeleportPlayer by inject()
     private val getWhitelistedPlayers: GetWhitelistedPlayers by inject()
@@ -316,7 +318,11 @@ class WarpMenu(
         for (warp in warps) {
             val warpModel = warp.toViewModel()
             val locationText = warpModel.location?.let { location ->
-                "${location.blockX}, ${location.blockY}, ${location.blockZ}"
+                if (configService.worldNameEnabled()) {
+                    "${location.world.name}: ${location.blockX}, ${location.blockY}, ${location.blockZ}"
+                } else {
+                    "${location.blockX}, ${location.blockY}, ${location.blockZ}"
+                }
             } ?: run {
                 "Location not found"
             }
