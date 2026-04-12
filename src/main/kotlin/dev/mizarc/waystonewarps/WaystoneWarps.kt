@@ -68,7 +68,7 @@ import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 
-class WaystoneWarps: JavaPlugin() {
+class WaystoneWarps : JavaPlugin() {
     companion object {
         lateinit var api: WaystoneWarpsAPI
             private set
@@ -94,6 +94,7 @@ class WaystoneWarps: JavaPlugin() {
     private lateinit var teleportationService: TeleportationService
     private lateinit var structureParticleService: StructureParticleService
     private lateinit var playerParticleService: PlayerParticleService
+    private lateinit var playerCountdownService: PlayerCountdownService
     private lateinit var worldService: WorldService
     private lateinit var hologramService: HologramService
     private lateinit var configService: ConfigService
@@ -140,7 +141,7 @@ class WaystoneWarps: JavaPlugin() {
 
         // Initialise API
         api = WaystoneWarpsAPI(warpRepository)
-        server.servicesManager.register( WaystoneWarpsAPI::class.java, api, this, ServicePriority.Normal )
+        server.servicesManager.register(WaystoneWarpsAPI::class.java, api, this, ServicePriority.Normal)
 
         for (warp in warpRepository.getAll()) {
             structureParticleService.spawnParticles(warp)
@@ -157,7 +158,7 @@ class WaystoneWarps: JavaPlugin() {
     private fun initialiseVaultDependency() {
         if (Bukkit.getPluginManager().getPlugin("Vault") != null) {
             server.servicesManager.getRegistration(Chat::class.java)?.let { metadata = it.provider }
-            server.servicesManager.getRegistration(Economy::class.java)?.let {economy = it.provider}
+            server.servicesManager.getRegistration(Economy::class.java)?.let { economy = it.provider }
             logger.info(Chat::class.java.toString())
         }
     }
@@ -192,8 +193,10 @@ class WaystoneWarps: JavaPlugin() {
         }
         structureBuilderService = StructureBuilderServiceBukkit(this, configService)
         scheduler = SchedulerServiceBukkit(this)
-        teleportationService = TeleportationServiceBukkit(playerAttributeService, configService,
-            movementMonitorService, whitelistRepository, scheduler, economy)
+        teleportationService = TeleportationServiceBukkit(
+            playerAttributeService, configService,
+            movementMonitorService, whitelistRepository, scheduler, economy
+        )
         structureParticleService = StructureParticleServiceBukkit(this, discoveryRepository, whitelistRepository)
         playerParticleService = PlayerParticleServiceBukkit(this, playerAttributeService)
         hologramService = HologramServiceBukkit(configService)
@@ -201,6 +204,7 @@ class WaystoneWarps: JavaPlugin() {
         warpEventPublisher = WarpEventPublisherBukkit()
         playerLocaleService = PlayerLocaleServicePaper()
         localizationProvider = PropertiesLocalizationProvider(configService, dataFolder, PlayerLocaleServicePaper())
+        playerCountdownService = PlayerCountdownServiceBukkit(this, localizationProvider, playerAttributeService)
     }
 
     fun initialiseLang() {
@@ -225,20 +229,45 @@ class WaystoneWarps: JavaPlugin() {
         }
 
         val actions = module {
-            single { CreateWarp(warpRepository, playerAttributeService, structureBuilderService,
-                discoveryRepository, structureParticleService, hologramService, warpEventPublisher) }
+            single {
+                CreateWarp(
+                    warpRepository, playerAttributeService, structureBuilderService,
+                    discoveryRepository, structureParticleService, hologramService, warpEventPublisher
+                )
+            }
             single { GetWarpPlayerAccess(discoveryRepository) }
             single { GetPlayerWarpAccess(discoveryRepository, warpRepository) }
             single { UpdateWarpIcon(warpRepository, warpEventPublisher) }
             single { UpdateWarpName(warpRepository, hologramService, warpEventPublisher) }
             single { GetWarpAtPosition(warpRepository) }
-            single { BreakWarpBlock(warpRepository, structureBuilderService,
-                discoveryRepository, whitelistRepository, structureParticleService, hologramService, warpEventPublisher) }
-            single { TeleportPlayer(teleportationService, playerAttributeService, playerParticleService,
-                discoveryRepository)}
+            single {
+                BreakWarpBlock(
+                    warpRepository,
+                    structureBuilderService,
+                    discoveryRepository,
+                    whitelistRepository,
+                    structureParticleService,
+                    hologramService,
+                    warpEventPublisher
+                )
+            }
+            single {
+                TeleportPlayer(
+                    teleportationService, playerAttributeService, playerParticleService, playerCountdownService,
+                    discoveryRepository
+                )
+            }
             single { LogPlayerMovement(movementMonitorService) }
             single { DiscoverWarp(discoveryRepository) }
-            single { MoveWarp(warpRepository, structureBuilderService, structureParticleService, hologramService, warpEventPublisher) }
+            single {
+                MoveWarp(
+                    warpRepository,
+                    structureBuilderService,
+                    structureParticleService,
+                    hologramService,
+                    warpEventPublisher
+                )
+            }
             single { ToggleLock(warpRepository, warpEventPublisher) }
             single { GetWhitelistedPlayers(whitelistRepository) }
             single { ToggleWhitelist(whitelistRepository, warpRepository) }
@@ -252,10 +281,32 @@ class WaystoneWarps: JavaPlugin() {
             single { GetFavouritedWarpAccess(discoveryRepository, warpRepository) }
             single { GetOwnedWarps(warpRepository) }
             single { ListInvalidWarps(warpRepository, worldService) }
-            single { RemoveAllInvalidWarps(warpRepository, worldService, discoveryRepository, whitelistRepository, warpEventPublisher) }
-            single { RemoveInvalidWarpsForWorld(warpRepository, worldService, discoveryRepository, whitelistRepository, warpEventPublisher) }
+            single {
+                RemoveAllInvalidWarps(
+                    warpRepository,
+                    worldService,
+                    discoveryRepository,
+                    whitelistRepository,
+                    warpEventPublisher
+                )
+            }
+            single {
+                RemoveInvalidWarpsForWorld(
+                    warpRepository,
+                    worldService,
+                    discoveryRepository,
+                    whitelistRepository,
+                    warpEventPublisher
+                )
+            }
 
-            single<LocalizationProvider> { PropertiesLocalizationProvider(configService, dataFolder, playerLocaleService) }
+            single<LocalizationProvider> {
+                PropertiesLocalizationProvider(
+                    configService,
+                    dataFolder,
+                    playerLocaleService
+                )
+            }
         }
 
         startKoin { modules(repositories, actions) }

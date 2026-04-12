@@ -2,6 +2,7 @@ package dev.mizarc.waystonewarps.application.actions.teleport
 
 import dev.mizarc.waystonewarps.application.results.TeleportResult
 import dev.mizarc.waystonewarps.application.services.PlayerAttributeService
+import dev.mizarc.waystonewarps.application.services.PlayerCountdownService
 import dev.mizarc.waystonewarps.application.services.PlayerParticleService
 import dev.mizarc.waystonewarps.application.services.TeleportationService
 import dev.mizarc.waystonewarps.domain.discoveries.DiscoveryRepository
@@ -9,15 +10,20 @@ import dev.mizarc.waystonewarps.domain.warps.Warp
 import java.time.Instant
 import java.util.*
 
-class TeleportPlayer(private val teleportationService: TeleportationService,
-                     private val playerAttributeService: PlayerAttributeService,
-                     private val playerParticleService: PlayerParticleService,
-                     private val discoveryRepository: DiscoveryRepository) {
+class TeleportPlayer(
+    private val teleportationService: TeleportationService,
+    private val playerAttributeService: PlayerAttributeService,
+    private val playerParticleService: PlayerParticleService,
+    private val playerCountdownService: PlayerCountdownService,
+    private val discoveryRepository: DiscoveryRepository
+) {
 
-    fun execute(playerId: UUID, warp: Warp, onSuccess: () -> Unit, onPending: () -> Unit,
-                onInsufficientFunds: () -> Unit, onCanceled: () -> Unit, onWorldNotFound: () -> Unit,
-                onLocked: () -> Unit, onFailure: () -> Unit, onPermissionDenied: () -> Unit,
-                onInterworldPermissionDenied: () -> Unit) {
+    fun execute(
+        playerId: UUID, warp: Warp, onSuccess: () -> Unit, onPending: () -> Unit,
+        onInsufficientFunds: () -> Unit, onCanceled: () -> Unit, onWorldNotFound: () -> Unit,
+        onLocked: () -> Unit, onFailure: () -> Unit, onPermissionDenied: () -> Unit,
+        onInterworldPermissionDenied: () -> Unit
+    ) {
         // Retrieve player settings
         val timer = playerAttributeService.getTeleportTimer(playerId)
 
@@ -36,38 +42,47 @@ class TeleportPlayer(private val teleportationService: TeleportationService,
                     }
                     playerParticleService.removeParticles(playerId)
                     playerParticleService.spawnPostParticles(playerId)
+                    playerCountdownService.cancelCountdown(playerId)
                 },
                 onPending = {
                     onPending()
                     playerParticleService.spawnPreParticles(playerId)
+                    playerCountdownService.startCountdown(playerId, warp)
                 },
                 onInsufficientFunds = {
                     onInsufficientFunds()
                     playerParticleService.removeParticles(playerId)
+                    playerCountdownService.cancelCountdown(playerId)
                 },
                 onCanceled = {
                     onCanceled()
                     playerParticleService.removeParticles(playerId)
+                    playerCountdownService.cancelCountdown(playerId)
                 },
                 onWorldNotFound = {
                     onWorldNotFound()
                     playerParticleService.removeParticles(playerId)
+                    playerCountdownService.cancelCountdown(playerId)
                 },
                 onLocked = {
                     onLocked()
                     playerParticleService.removeParticles(playerId)
+                    playerCountdownService.cancelCountdown(playerId)
                 },
                 onFailure = {
                     onFailure()
                     playerParticleService.removeParticles(playerId)
+                    playerCountdownService.cancelCountdown(playerId)
                 },
                 onPermissionDenied = {
                     onPermissionDenied()
                     playerParticleService.removeParticles(playerId)
+                    playerCountdownService.cancelCountdown(playerId)
                 },
                 onInterworldPermissionDenied = {
                     onInterworldPermissionDenied()
                     playerParticleService.removeParticles(playerId)
+                    playerCountdownService.cancelCountdown(playerId)
                 }
             )
             return
@@ -82,6 +97,7 @@ class TeleportPlayer(private val teleportationService: TeleportationService,
                 discovery.lastVisitedTime = Instant.now()
                 discoveryRepository.update(discovery)
             }
+
             TeleportResult.INSUFFICIENT_FUNDS -> onInsufficientFunds()
             TeleportResult.WORLD_NOT_FOUND -> onWorldNotFound()
             TeleportResult.LOCKED -> onLocked()
