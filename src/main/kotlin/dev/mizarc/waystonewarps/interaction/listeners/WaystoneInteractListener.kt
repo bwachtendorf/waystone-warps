@@ -5,6 +5,7 @@ import dev.mizarc.waystonewarps.application.actions.whitelist.GetWhitelistedPlay
 import dev.mizarc.waystonewarps.application.actions.world.GetWarpAtPosition
 import dev.mizarc.waystonewarps.application.actions.world.IsValidWarpBase
 import dev.mizarc.waystonewarps.application.services.ConfigService
+import dev.mizarc.waystonewarps.application.services.WorldGroupService
 import dev.mizarc.waystonewarps.infrastructure.mappers.toPosition3D
 import dev.mizarc.waystonewarps.interaction.localization.LocalizationKeys
 import dev.mizarc.waystonewarps.interaction.localization.LocalizationProvider
@@ -34,7 +35,10 @@ import org.bukkit.inventory.ItemStack
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
-class WaystoneInteractListener(private val configService: ConfigService) : Listener, KoinComponent {
+class WaystoneInteractListener(
+    private val configService: ConfigService,
+    private val worldGroupService: WorldGroupService
+) : Listener, KoinComponent {
     private val getWarpAtPosition: GetWarpAtPosition by inject()
     private val discoverWarp: DiscoverWarp by inject()
     private val getWhitelistedPlayers: GetWhitelistedPlayers by inject()
@@ -99,7 +103,8 @@ class WaystoneInteractListener(private val configService: ConfigService) : Liste
                                 player,
                                 menuNavigator,
                                 localizationProvider,
-                                configService
+                                configService,
+                                worldGroupService
                             )
                         )
                     }
@@ -116,7 +121,15 @@ class WaystoneInteractListener(private val configService: ConfigService) : Liste
                 }
 
                 if (configService.allowWarpsMenuViaWaystone()) {
-                    menuNavigator.openMenu(WarpMenu(player, menuNavigator, localizationProvider, configService))
+                    menuNavigator.openMenu(
+                        WarpMenu(
+                            player,
+                            menuNavigator,
+                            localizationProvider,
+                            configService,
+                            worldGroupService
+                        )
+                    )
                 }
 
                 // Check if player has permission to discover warps
@@ -150,7 +163,8 @@ class WaystoneInteractListener(private val configService: ConfigService) : Liste
                                 player,
                                 menuNavigator,
                                 localizationProvider,
-                                configService
+                                configService,
+                                worldGroupService
                             )
                         )
                     } else {

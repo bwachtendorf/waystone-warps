@@ -5,6 +5,7 @@ import dev.mizarc.waystonewarps.application.services.ConfigService
 import dev.mizarc.waystonewarps.application.services.MovementMonitorService
 import dev.mizarc.waystonewarps.application.services.PlayerAttributeService
 import dev.mizarc.waystonewarps.application.services.TeleportationService
+import dev.mizarc.waystonewarps.application.services.WorldGroupService
 import dev.mizarc.waystonewarps.application.services.scheduling.SchedulerService
 import dev.mizarc.waystonewarps.application.services.scheduling.Task
 import dev.mizarc.waystonewarps.domain.warps.Warp
@@ -20,12 +21,15 @@ import org.bukkit.potion.PotionEffectType
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 
-class TeleportationServiceBukkit(private val playerAttributeService: PlayerAttributeService,
-                                 private val configService: ConfigService,
-                                 private val movementMonitorService: MovementMonitorService,
-                                 private val whitelistRepository: WhitelistRepository,
-                                 private val scheduler: SchedulerService,
-                                 private val economy: Economy?): TeleportationService {
+class TeleportationServiceBukkit(
+    private val playerAttributeService: PlayerAttributeService,
+    private val configService: ConfigService,
+    private val movementMonitorService: MovementMonitorService,
+    private val whitelistRepository: WhitelistRepository,
+    private val scheduler: SchedulerService,
+    private val economy: Economy?,
+    private val worldGroupService: WorldGroupService
+) : TeleportationService {
     private val activeTeleportations = ConcurrentHashMap<UUID, PendingTeleport>()
 
     override fun teleportPlayer(playerId: UUID, warp: Warp): TeleportResult {
@@ -39,7 +43,23 @@ class TeleportationServiceBukkit(private val playerAttributeService: PlayerAttri
 
         // Check inter-world teleport permission if changing worlds
         val currentWorld = player.world.uid
-        if (warp.worldId != currentWorld && !player.hasPermission("waystonewarps.teleport.interworld")) {
+        var hasCrossWorld = false
+
+        if (warp.worldId == currentWorld) {
+            hasCrossWorld = true
+        } else if (
+            worldGroupService.supportsWorldGroups() &&
+            worldGroupService.inSameGroup(
+                warp.worldId,
+                currentWorld
+            ) &&
+            player.hasPermission("waystonewarps.teleport.interworldgroup")
+        ) {
+            hasCrossWorld = true
+        } else if (warp.worldId != currentWorld && player.hasPermission("waystonewarps.teleport.interworld")) {
+            hasCrossWorld = true
+        }
+        if (!hasCrossWorld) {
             return TeleportResult.INTERWORLD_PERMISSION_DENIED
         }
 
@@ -73,10 +93,12 @@ class TeleportationServiceBukkit(private val playerAttributeService: PlayerAttri
         return TeleportResult.SUCCESS
     }
 
-    override fun scheduleDelayedTeleport(playerId: UUID, warp: Warp, delaySeconds: Int, onSuccess: () -> Unit,
-                                         onPending: () -> Unit, onInsufficientFunds: () -> Unit, onCanceled: () -> Unit,
-                                         onWorldNotFound: () -> Unit, onLocked: () -> Unit, onFailure: () -> Unit,
-                                         onPermissionDenied: () -> Unit, onInterworldPermissionDenied: () -> Unit) {
+    override fun scheduleDelayedTeleport(
+        playerId: UUID, warp: Warp, delaySeconds: Int, onSuccess: () -> Unit,
+        onPending: () -> Unit, onInsufficientFunds: () -> Unit, onCanceled: () -> Unit,
+        onWorldNotFound: () -> Unit, onLocked: () -> Unit, onFailure: () -> Unit,
+        onPermissionDenied: () -> Unit, onInterworldPermissionDenied: () -> Unit
+    ) {
         // Cancel existing pending teleport if any
         activeTeleportations[playerId]?.let {
             it.taskHandle.cancel()
@@ -105,8 +127,9 @@ class TeleportationServiceBukkit(private val playerAttributeService: PlayerAttri
         }
 
         // Check for cooldown bypass or instant teleport if no timer
-        if (player.hasPermission("waystonewarps.teleport.cooldown_bypass") || 
-            playerAttributeService.getTeleportTimer(playerId) <= 0) {
+        if (player.hasPermission("waystonewarps.teleport.cooldown_bypass") ||
+            playerAttributeService.getTeleportTimer(playerId) <= 0
+        ) {
             val teleportResult = teleportPlayer(playerId, warp)
             if (teleportResult == TeleportResult.SUCCESS) {
                 onSuccess()
@@ -174,6 +197,7 @@ class TeleportationServiceBukkit(private val playerAttributeService: PlayerAttri
                 }
                 hasEnoughItems(player, material, teleportCost)
             }
+
             CostType.MONEY -> hasEnoughMoney(player, teleportCost)
             CostType.XP -> hasEnoughXp(player, teleportCost)
         }
@@ -190,6 +214,7 @@ class TeleportationServiceBukkit(private val playerAttributeService: PlayerAttri
                 }
                 removeItems(player, material, teleportCost)
             }
+
             CostType.MONEY -> subtractMoney(player, teleportCost)
             CostType.XP -> subtractXp(player, teleportCost)
         }
@@ -281,7 +306,8 @@ class TeleportationServiceBukkit(private val playerAttributeService: PlayerAttri
                 val block = location.world.getBlockAt(location.blockX + x, location.blockY - 2, location.blockZ + z)
 
                 if (block.type in configService.getPlatformReplaceBlocks().mapNotNull { it ->
-                        runCatching { Material.valueOf(it) }.getOrNull() }) {
+                        runCatching { Material.valueOf(it) }.getOrNull()
+                    }) {
                     block.breakNaturally()
                     block.type = Material.COBBLESTONE
                 }

@@ -45,6 +45,10 @@ repositories {
     maven {
         url = uri("https://jitpack.io")
     }
+    maven {
+        name = "Multiverse"
+        url = uri("https://repo.onarandombox.com/content/groups/public/")
+    }
 }
 
 dependencies {
@@ -60,6 +64,7 @@ dependencies {
     implementation("com.github.stefvanschie.inventoryframework:IF:0.11.6")
     compileOnly("com.github.MilkBowl:VaultAPI:1.7.1")
     compileOnly("me.xdrop:fuzzywuzzy:1.3.1")
+    compileOnly("org.mvplugins.multiverse.inventories:multiverse-inventories:5.3.2")
 }
 
 java {

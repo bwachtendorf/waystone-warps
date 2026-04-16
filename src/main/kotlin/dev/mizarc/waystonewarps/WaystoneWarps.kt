@@ -102,6 +102,7 @@ class WaystoneWarps : JavaPlugin() {
     private lateinit var warpEventPublisher: WarpEventPublisher
     private lateinit var playerLocaleService: PlayerLocaleService
     private lateinit var localizationProvider: LocalizationProvider
+    private lateinit var worldGroupService: WorldGroupService
 
     override fun onEnable() {
         // Create plugin folder
@@ -193,9 +194,20 @@ class WaystoneWarps : JavaPlugin() {
         }
         structureBuilderService = StructureBuilderServiceBukkit(this, configService)
         scheduler = SchedulerServiceBukkit(this)
+        worldGroupService = if (Bukkit.getPluginManager().getPlugin("Multiverse-Inventories") != null) {
+            logger.info("Initilized Multiverse support")
+            WorldGroupBukkitMultiverse(this)
+        } else {
+            WorldGroupBukkitUnsupported()
+        }
         teleportationService = TeleportationServiceBukkit(
-            playerAttributeService, configService,
-            movementMonitorService, whitelistRepository, scheduler, economy
+            playerAttributeService,
+            configService,
+            movementMonitorService,
+            whitelistRepository,
+            scheduler,
+            economy,
+            worldGroupService
         )
         structureParticleService = StructureParticleServiceBukkit(this, discoveryRepository, whitelistRepository)
         playerParticleService = PlayerParticleServiceBukkit(this, playerAttributeService)
@@ -313,19 +325,19 @@ class WaystoneWarps : JavaPlugin() {
     }
 
     private fun registerCommands() {
-        commandManager.registerCommand(WarpMenuCommand())
+        commandManager.registerCommand(WarpMenuCommand(configService, worldGroupService))
         commandManager.registerCommand(InvalidsCommand())
         commandManager.registerCommand(WarpCreateCommand())
     }
 
     private fun registerEvents() {
-        server.pluginManager.registerEvents(WaystoneInteractListener(configService), this)
+        server.pluginManager.registerEvents(WaystoneInteractListener(configService, worldGroupService), this)
         server.pluginManager.registerEvents(WaystoneDestructionListener(), this)
         server.pluginManager.registerEvents(PlayerMovementListener(), this)
         server.pluginManager.registerEvents(MoveToolListener(), this)
         server.pluginManager.registerEvents(ToolRemovalListener(), this)
         server.pluginManager.registerEvents(TeleportZoneProtectionListener(), this)
-        server.pluginManager.registerEvents(WarpItemListener(configService), this)
+        server.pluginManager.registerEvents(WarpItemListener(configService, worldGroupService), this)
         server.pluginManager.registerEvents(WaystoneBaseInteractListener(), this)
     }
 }

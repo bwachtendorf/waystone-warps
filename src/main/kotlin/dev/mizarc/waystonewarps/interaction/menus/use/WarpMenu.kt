@@ -12,6 +12,7 @@ import dev.mizarc.waystonewarps.application.actions.discovery.GetPlayerWarpAcces
 import dev.mizarc.waystonewarps.application.actions.management.GetOwnedWarps
 import dev.mizarc.waystonewarps.application.actions.whitelist.GetWhitelistedPlayers
 import dev.mizarc.waystonewarps.application.services.ConfigService
+import dev.mizarc.waystonewarps.application.services.WorldGroupService
 import dev.mizarc.waystonewarps.domain.warps.Warp
 import dev.mizarc.waystonewarps.interaction.localization.LocalizationKeys
 import dev.mizarc.waystonewarps.interaction.localization.LocalizationProvider
@@ -34,7 +35,8 @@ class WarpMenu(
     private val player: Player,
     private val menuNavigator: MenuNavigator,
     private val localizationProvider: LocalizationProvider,
-    private val configService: ConfigService
+    private val configService: ConfigService,
+    private val worldGroupService: WorldGroupService
 ) : Menu, KoinComponent {
     private val getPlayerWarpAccess: GetPlayerWarpAccess by inject()
     private val teleportPlayer: TeleportPlayer by inject()
@@ -335,7 +337,15 @@ class WarpMenu(
             val isDifferentWorld = warp.worldId != player.world.uid
             val hasInterworldPermission =
                 !isDifferentWorld || player.hasPermission("waystonewarps.teleport.interworld")
-            val hasPermission = hasTeleportPermission && hasInterworldPermission
+            val hasIntergroupPermission =
+                hasInterworldPermission || (
+                        worldGroupService.supportsWorldGroups() && player.hasPermission("waystonewarps.teleport.interworldgroup") &&
+                                worldGroupService.inSameGroup(
+                                    warp.worldId,
+                                    player.world.uid
+                                )
+                        )
+            val hasPermission = hasTeleportPermission && (hasInterworldPermission || hasIntergroupPermission)
 
             // Check if the warp is locked for this player
             val isLocked = warp.isLocked && !getWhitelistedPlayers.execute(warp.id)
@@ -374,7 +384,7 @@ class WarpMenu(
                     )
                 }
 
-                isDifferentWorld && !hasInterworldPermission -> {
+                !hasInterworldPermission && !hasIntergroupPermission -> {
                     customLore.add(
                         2, "§c${
                             localizationProvider.get(

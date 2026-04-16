@@ -85,6 +85,10 @@ permissions:
     description: Allows teleportation between different worlds
     default: op
 
+  waystonewarps.teleport.interworldgroup:
+    description: Allows teleportation between different worlds of same world group
+    default: op
+
   waystonewarps.teleport.cooldown_bypass:
     description: Bypasses the cooldown between teleportations
     default: op
